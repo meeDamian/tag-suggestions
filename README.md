@@ -102,7 +102,7 @@ For a `tag: vX.Y.Z`
 | `major`  | `vX`     | Only set if major tag creation is recommended.
 | `minor`  | `vX.Y`   | Only set if minor tag creation is recommended.
 
-### Advanced example
+### Custom `cmd` example
 
 ```yaml
 steps:
