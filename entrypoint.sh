@@ -7,29 +7,16 @@
 #   steps:
 #   …
 #   - id: tags
-#     uses: meeDamian/tag-suggestions@master
+#     uses: meeDamian/tag-suggestions@1.0
 #     with:
 #       tag: 0.0.2
 #
 #   - name: Print all recommended versions
-#     run: >
+#     run: |
 #       echo "latest: ${{ steps.tags.outputs.latest }}"
 #       echo "major:  ${{ steps.tags.outputs.major }}"
 #       echo "minor:  ${{ steps.tags.outputs.minor }}"
 #   …
-#
-# `tag:` is SemVer-compliant git tag, which then gets compared against already existing tags (see <alt-command>).
-#   The result is a list of recommended Docker tags to be created, or overriden upon release. For example:
-#
-#     Given already existing git tags:  v0.0.1  v1.0.1  v1.0.2  v1.1.0
-#         Running:  `./shortcut-tags.sh `v1.1.1`  only yield the following result:   latest  v1  v1.1
-#         As the tag being created was the highest(/latest) available.
-#
-#     Given the same starting git tags: v0.0.1  v1.0.1  v1.0.2  v1.1.0  v1.1.1
-#         Running:  `./shortcut-tags.sh v1.0.3`  only recommends:  v1.0
-#         As anything else would either created a downgrade, or confused the user.
-#
-# <alt-command> is an optional path to a new-line separated tags to be compared against. If not provided `git tag` is used.
 
 TAG="${INPUT_TAG}"
 
