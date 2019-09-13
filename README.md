@@ -47,7 +47,7 @@ v1.1
 
 See [action.yml](action.yml)
 
-### Minimal
+### Example usage
 
 
 ```yaml
@@ -59,7 +59,30 @@ on:
 
 steps:
 - uses: actions/checkout@v1
+
 - uses: meeDamian/tag-suggestions@1.0
+  id: tags
+
+- name: Print all recommended versions
+  run: |
+    echo "latest: ${{ steps.tags.outputs.latest }}"
+    echo "major:  ${{ steps.tags.outputs.major }}"
+    echo "minor:  ${{ steps.tags.outputs.minor }}"
+
+- name: Tag minor version, if recommended
+  run: |
+    # convert to lowercase
+    REPO="${GITHUB_REPOSITORY,,}"
+
+    # extract tag from `${GITHUB_REF}`.  Only works if workflow triggered by tag push.
+    VERSION="$(echo "${GITHUB_REF}" | awk -F/ '{print $NF}')"
+
+    if [[ -n "${{ steps.tags.outputs.minor }}" ]]; then
+      NEW_TAG="${REPO}:${{ steps.tags.outputs.minor }}"
+
+      docker tag  "${REPO}:${VERSION}"  "${NEW_TAG}"
+      docker push "${NEW TAG}"
+    fi
 ```
 
 ### Arguments
@@ -69,6 +92,15 @@ steps:
 | `tag`            | sometimes  | Git tag to base suggestions on.  If not provided, an extraction from `${GITHUB_REF}` is attempted (AKA not needed on git tag push).
 | `cmd`            | no         | A command listing all existing tags to take into account for tags suggestion.  By default `git tag -l` is used.
 
+### Outputs
+
+For a `tag: vX.Y.Z`
+
+| name     | value    | description
+|:--------:|----------|-------------
+| `latest` | `latest` | Only set if `:latest` tag creation is recommended.
+| `major`  | `vX`     | Only set if major tag creation is recommended.
+| `minor`  | `vX.Y`   | Only set if minor tag creation is recommended.
 
 ### Advanced example
 
@@ -77,6 +109,7 @@ steps:
 - uses: actions/checkout@master
 
 - uses: meeDamian/tag-suggestions@0.1
+  id: tags
   with:
     tag: v1.3.6
     cmd: "git tag -l | grep variant-one"
