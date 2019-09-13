@@ -1,0 +1,34 @@
+name: Suggest Docker Tags
+description: Github Action suggesting convenience Docker Tags based on a given Git Tag
+author: 'Damian Mee <spam@meedamian.com>'
+
+
+inputs:
+  tag:
+    description: The semver 2.0 compatible tag to be added
+    required: true
+
+  cmd:
+    description: The command to retreive a newline-separated list of tags to be considered
+    default: git tag -l
+
+
+outputs:
+  latest:
+    description: Set, if creating `:latest` Docker Tag is recommended
+
+  major:
+    description: Set, if creating a `:vX`, or `:X` Docker Tag is recommended
+
+  minor:
+    description: Set, if creating a `:vX.Y`, or `:X.Y` Docker Tag is recommended
+
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+
+
+branding:
+  icon: tag
+  color: white

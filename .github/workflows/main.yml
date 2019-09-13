@@ -1,0 +1,22 @@
+name: Use self to generate tags
+
+on: push
+
+jobs:
+  build:
+    name: Generate suggested tags for self
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1.0.0
+
+      - name: Generate suggested tags
+        id: tags
+        uses: meeDamian/tag-suggestions@master
+        with:
+          tag: v1.0.2
+
+      - name: Print all suggested tags
+        run: |
+           echo "latest: ${{ steps.tags.outputs.latest }}"
+           echo "major:  ${{ steps.tags.outputs.major }}"
+           echo "minor:  ${{ steps.tags.outputs.minor }}"
