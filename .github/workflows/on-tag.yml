@@ -1,4 +1,4 @@
-name: GH Action branches
+name: Release branches
 
 # Only triggered on git tag push
 on:

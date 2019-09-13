@@ -5,10 +5,10 @@
 [![gh_last_release_svg]][gh_last_release_url]
 [![tippin_svg]][tippin_url]
 
-[main_gh_action_svg]: https://github.com/meeDamian/tag-suggestions/workflows/.github/workflows/main.yml/badge.svg
+[main_gh_action_svg]: https://github.com/meeDamian/tag-suggestions/workflows/Release%20branches/badge.svg
 [main_gh_action_url]: https://github.com/meeDamian/tag-suggestions/blob/master/.github/workflows/main.yml
 
-[branches_gh_action_svg]: https://github.com/meeDamian/tag-suggestions/workflows/.github/workflows/on-tag.yml/badge.svg
+[branches_gh_action_svg]: https://github.com/meeDamian/tag-suggestions/workflows/Use%20self%20to%20generate%20tags/badge.svg
 [branches_gh_action_url]: https://github.com/meeDamian/tag-suggestions/blob/master/.github/workflows/on-tag.yml
 
 [gh_last_release_svg]: https://img.shields.io/github/v/release/meeDamian/tag-suggestions?sort=semver
