@@ -73,13 +73,13 @@ fi
 # See where the provided tag ranks among tags with the same MAJOR version.  Suggest ex. `:v5`, if ranks the highest.
 MAJOR="$(echo "${TAG}" | cut -d. -f-1)"
 NUMBER_IN_MAJOR_ORDER=$(sorted_tags | grep "^${MAJOR}" | grep -nm1 "^${TAG}$" | cut -d: -f1)
-if [ "${NUMBER_IN_MAJOR_ORDER}" -eq "1" ]; then
+if [ "${NUMBER_IN_MAJOR_ORDER}" -eq "1" ] && [ "${MAJOR}" != "v0" ]; then
   echo ::set-output name=major::"${MAJOR}"
 fi
 
 # See where the provided tag ranks among tags with the same MINOR version.  Suggest ex. `:v4.2`, if ranks the highest.
 MINOR="$(echo "${TAG}" | cut -d. -f-2)"
 NUMBER_IN_MINOR_ORDER=$(sorted_tags | grep "^${MINOR}" | grep -nm1 "^${TAG}$" | cut -d: -f1)
-if [ "${NUMBER_IN_MINOR_ORDER}" -eq "1" ]; then
+if [ "${NUMBER_IN_MINOR_ORDER}" -eq "1" ] && [ "${MINOR}" != "v0.0" ]; then
   echo ::set-output name=minor::"${MINOR}"
 fi
