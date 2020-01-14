@@ -9,7 +9,8 @@ inputs:
     required: true
 
   cmd:
-    description: The command to retreive a newline-separated list of tags to be considered
+    description: The command to retrieve a newline-separated list of tags to be considered
+    required: false
     default: git tag -l
 
 
