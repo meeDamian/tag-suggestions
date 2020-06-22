@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-18.04
 
     steps:
-     - name: Generate suggested tags
+      - name: Generate suggested tags
         id: tags
         uses: meeDamian/tag-suggestions@master
         with:
