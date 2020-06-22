@@ -7,17 +7,8 @@ jobs:
     name: Generate suggested tags for self
     runs-on: ubuntu-18.04
 
-    strategy:
-      fail-fast: false
-      matrix:
-        checkout:
-          - v1
-          - v2
-
     steps:
-      - uses: actions/checkout@${{ matrix.checkout }}
-
-      - name: Generate suggested tags
+     - name: Generate suggested tags
         id: tags
         uses: meeDamian/tag-suggestions@master
         with:
