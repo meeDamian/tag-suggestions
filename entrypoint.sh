@@ -18,68 +18,79 @@
 #       echo "minor:  ${{ steps.tags.outputs.minor }}"
 #   …
 
-TAG="${INPUT_TAG}"
+PKG="meeDamian/tag-suggestions@1.0"
 
 # If `tag:` not provided, let's try using one available from github's context
-if [ -z "${TAG}" ]; then
-  TAG="$(echo "${GITHUB_REF}" | awk -F/ '{print $NF}')"
-fi
+TAG="${INPUT_TAG:-${GITHUB_REF#refs/tags/}}"
 
 # If all ways of getting the tag failed, show error
-if [ -z "${TAG}" ]; then
-  >&2 printf "\nERR: Invalid input: 'tag' is required, and must be specified.\n"
-  >&2 printf "\tNote: It's used as a base for the suggestions.\n\n"
-  >&2 printf "Try:\n"
-  >&2 printf "\tuses: meeDamian/tag-suggestions@1.0\n"
-  >&2 printf "\twith:\n"
-  >&2 printf "\t  tag: v0.0.1\n"
-  >&2 printf "\t  ...\n"
-  exit 1
-fi
+if [ -z "$TAG" ]; then
+	>&2 echo "
+ERR: Invalid input: 'tag' is required, and must be specified.
+	Note: It's used as a base for the suggestions.
 
-# A command to get a list of currently existing tags.  Default, defined in `action.yml`, is `git tag -l`.
-CMD="${INPUT_CMD}"
+Try:
+	uses: $PKG
+	with:
+	  tag: v0.0.1
+	  ...
+"
+	exit 1
+fi
 
 SEMVER_REGEX="^[vV]?(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(\\-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"
 
 # Verify that provided version conforms to SemVer pattern
-if ! echo "${TAG}" | grep -Eq "${SEMVER_REGEX}"; then
-  >&2 printf "\nERR: Provided tag is not a valid Semver 2.0\n"
-  >&2 printf "\tNote: To learn that constitues a valid tag see: https://semver.org\n"
-  exit 1
+if ! echo "$TAG" | grep -Eq "$SEMVER_REGEX"; then
+	>&2 echo "
+ERR: Provided tag is not valid Semver 2.0
+	Note: To learn that constitutes a valid tag see: https://semver.org
+"
+	exit 1
 fi
+
+gh_api_url="https://api.github.com/repos/$GITHUB_REPOSITORY/git/refs/tags"
+if ! tags="$(wget -qO- "$gh_api_url" )"; then
+	>&2 echo "
+ERR: Getting a list of tags failed
+	Note: Attempted URL: $gh_api_url
+"
+	exit 1
+fi
+
+tags="$(echo "$tags" | jq -r '.[].ref' | sed 's|refs/tags/||')"
 
 # Print a warning about found non-SemVer version, and list them
-NON_SEMVER="$(eval "${CMD}" | grep -Ev "${SEMVER_REGEX}" || true)"
-if [ -n "${NON_SEMVER}" ]; then
-  >&2 printf "\n\tWARNING: The following tags are ignored, for not being SemVer compilant:\n"
-  >&2 printf "\n%s\n\n" "$(echo "${NON_SEMVER}" | head -c -1 | tr '\n' ' ' | sed 's/ /, /g')"
+if non_semver="$(echo "$tags" | grep -Ev "$SEMVER_REGEX")"; then
+	>&2 echo "
+WARN: The following tags are ignored, for not being SemVer compliant:
+	$(echo "$non_semver" | tr '\n' , | sed -e 's|,$||' -e 's|,|, |g' )
+"
 fi
 
-# make sure tag is on the list of tags
-LIST=$(printf "%s\n%s\n" "$(eval "${CMD}")" "${TAG}" | sort | uniq)
-
-# Return a list of semver-compliant tags in newest-first order.
-sorted_tags() {
-  echo "${LIST}" | grep -E "${SEMVER_REGEX}" | tr - \~ | sort -Vr | tr \~ -
-}
+tags="$(printf "%s\n%s\n" "$TAG" "$tags" | grep -E "$SEMVER_REGEX" | tr - \~ | sort -Vr | uniq | tr \~ -)"
 
 # See where the provided tag ranks among ALL tags.  Suggest ":latest" if it ranks highest.
-NUMBER_IN_TOTAL_ORDER=$(sorted_tags | grep -nm1 "^${TAG}$" | cut -d: -f1)
-if [ "${NUMBER_IN_TOTAL_ORDER}" -eq "1" ]; then
-  echo ::set-output name=latest::latest
+pos="$(echo "$tags" | grep -nm1 "^$TAG$")"
+if [ -z "${pos%1:*}" ]; then
+	echo ::set-output name=latest::latest
 fi
 
-# See where the provided tag ranks among tags with the same MAJOR version.  Suggest ex. `:v5`, if ranks the highest.
-MAJOR="$(echo "${TAG}" | cut -d. -f-1)"
-NUMBER_IN_MAJOR_ORDER=$(sorted_tags | grep "^${MAJOR}" | grep -nm1 "^${TAG}$" | cut -d: -f1)
-if [ "${NUMBER_IN_MAJOR_ORDER}" -eq "1" ] && [ "${MAJOR}" != "v0" ]; then
-  echo ::set-output name=major::"${MAJOR}"
-fi
+# See where the provided tag ranks among tags with the same minor version.  Suggest ex. `:v4.2`, if ranks the highest.
+minor="$(echo "$TAG" | cut -d. -f-2)"
+[ "$minor" = "v0.0" ] && exit 0
 
-# See where the provided tag ranks among tags with the same MINOR version.  Suggest ex. `:v4.2`, if ranks the highest.
-MINOR="$(echo "${TAG}" | cut -d. -f-2)"
-NUMBER_IN_MINOR_ORDER=$(sorted_tags | grep "^${MINOR}" | grep -nm1 "^${TAG}$" | cut -d: -f1)
-if [ "${NUMBER_IN_MINOR_ORDER}" -eq "1" ] && [ "${MINOR}" != "v0.0" ]; then
-  echo ::set-output name=minor::"${MINOR}"
-fi
+pos=$(echo "$tags" | grep "^$minor" | grep -nm1 "^$TAG$")
+[ -n "${pos%1:*}" ] && exit 0
+
+echo ::set-output name=minor::"$minor"
+
+
+# See where the provided tag ranks among tags with the same major version.  Suggest ex. `:v5`, if ranks the highest.
+major="$(echo "$TAG" | cut -d. -f-1)"
+[ "$major" = "v0" ] && exit 0
+
+pos="$(echo "$tags" | grep "^$major" | grep -nm1 "^$TAG$")"
+[ -n "${pos%1:*}" ] && exit 0
+
+echo ::set-output name=major::"$major"

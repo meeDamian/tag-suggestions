@@ -23,29 +23,11 @@ Github Action to, based on git tags, generate convenience Docker tags.
 
 In other words, this action suggests you what extra tags to create for Docker Hub upon new version-tag creation.  For example, given existing tags: `v1.0.0`, `v1.0.1`, `v1.1.0`, and new tag being added: `v1.0.2` this action would recommend the creation of `v1.0`, but not `:latest` (as a tag with higher version exists), nor `:v1` (as a newer tag with the same major version exists).
 
-#### Geekspeak 
-
-```shell script
-$ INPUT_TAG="v1.0.2" \
-  INPUT_CMD="echo 'v1.0.0 v1.0.1 v1.1.0' | tr ' ' '\n'" \
-  ./entrypoint.sh | awk -F: '{print $NF}'
-v1.0
-
-$ INPUT_TAG="v1.1.2" \
-  INPUT_CMD="echo 'v1.0.0 v1.0.1 v1.1.0' | tr ' ' '\n'" \
-  ./entrypoint.sh | awk -F: '{print $NF}'
-latest
-v1
-v1.1
-``` 
-
-> Note: `awk` above just strips required [Github notation].
-
-[Github notation]: https://help.github.com/en/articles/development-tools-for-github-actions#set-an-output-parameter-set-output
 
 # Usage
 
 See [action.yml](action.yml)
+
 
 ### Example usage
 
@@ -53,8 +35,7 @@ See [action.yml](action.yml)
 ```yaml
 on:
   push:
-    tags:
-      - '*'
+    tags: [ '*' ]
 …
 
 steps:
@@ -74,14 +55,14 @@ steps:
     # convert to lowercase
     REPO="${GITHUB_REPOSITORY,,}"
 
-    # extract tag from `${GITHUB_REF}`.  Only works if workflow triggered by tag push.
-    VERSION="$(echo "${GITHUB_REF}" | awk -F/ '{print $NF}')"
+    # extract tag from `$GITHUB_REF`.  Only works if workflow triggered by tag push.
+    VERSION="${GITHUB_REF#refs/tags/}"
 
-    if [[ -n "${{ steps.tags.outputs.minor }}" ]]; then
-      NEW_TAG="${REPO}:${{ steps.tags.outputs.minor }}"
+    if [ -n "${{ steps.tags.outputs.minor }}" ]; then
+      NEW_TAG="$REPO:${{ steps.tags.outputs.minor }}"
 
-      docker tag  "${REPO}:${VERSION}"  "${NEW_TAG}"
-      docker push "${NEW TAG}"
+      docker tag  "$REPO:$VERSION"  "$NEW_TAG"
+      docker push "$NEW_TAG"
     fi
 ```
 
@@ -90,7 +71,7 @@ steps:
 | name             | required   | description 
 |:----------------:|:----------:|-------------
 | `tag`            | sometimes  | Git tag to base suggestions on.  If not provided, an extraction from `${GITHUB_REF}` is attempted (AKA not needed on git tag push).
-| `cmd`            | no         | A command listing all existing tags to take into account for tags suggestion.  By default `git tag -l` is used.
+
 
 ### Outputs
 
@@ -102,20 +83,6 @@ For a `tag: vX.Y.Z`
 | `major`  | `vX`     | Only set if major tag creation is recommended.
 | `minor`  | `vX.Y`   | Only set if minor tag creation is recommended.
 
-### Custom `cmd` example
-
-```yaml
-steps:
-- uses: actions/checkout@master
-
-- uses: meeDamian/tag-suggestions@0.1
-  id: tags
-  with:
-    tag: v1.3.6
-    cmd: "git tag -l | grep variant-one"
-```
-
-This example would be useful if your repo contains 2 variants of your software.  It seeks tag suggestions for version `v1.3.6` only among tags that are marked as `variant-one`. 
 
 ### Versioning
 

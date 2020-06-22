@@ -6,8 +6,16 @@ jobs:
   build:
     name: Generate suggested tags for self
     runs-on: ubuntu-18.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        checkout:
+          - v1
+          - v2
+
     steps:
-      - uses: actions/checkout@v1.0.0
+      - uses: actions/checkout@${{ matrix.checkout }}
 
       - name: Generate suggested tags
         id: tags
@@ -17,6 +25,7 @@ jobs:
 
       - name: Print all suggested tags
         run: |
-           echo "latest: ${{ steps.tags.outputs.latest }}"
-           echo "major:  ${{ steps.tags.outputs.major }}"
-           echo "minor:  ${{ steps.tags.outputs.minor }}"
+          echo "latest: ${{ steps.tags.outputs.latest }}"
+          echo "major:  ${{ steps.tags.outputs.major }}"
+          echo "minor:  ${{ steps.tags.outputs.minor }}"
+
