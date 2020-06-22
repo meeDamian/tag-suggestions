@@ -12,7 +12,7 @@ jobs:
         id: tags
         uses: meeDamian/tag-suggestions@master
         with:
-          tag: v1.0.2
+          tag: v1.0.99
 
       - name: Print all suggested tags
         run: |
